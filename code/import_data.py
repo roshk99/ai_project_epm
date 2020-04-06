@@ -1,5 +1,7 @@
 import xlrd
 import numpy as np
+import datetime
+import pickle
 
 def read_final_grades_sheet(sheet, student_ids):
     initial_headers = sheet.row_values(0)
@@ -40,8 +42,8 @@ def import_logs():
             student_ids.append(row[0])
             values.append(row[1:])
 
-        student_ids = np.array(student_ids)
-        values = np.array(values)
+        student_ids = np.array(student_ids).astype('int')
+        values = np.array(values).astype('int')
 
         return student_ids, values
 
@@ -56,10 +58,79 @@ def read_int_grades():
 
     return values
 
+def read_exercises(student_ids, logs):
+    headers = ['Session Number', 'Student Id', 'Exercise', 'Activity',
+        'Start_time', 'End_time', 'Idle Time', 'Mouse Wheel', 'Mouse Wheel Click',
+        'Mouse Wheel Click Left', 'Mouse Wheel Click Right', 'Mouse Movement', 'Keystroke']
+    foldername = '../EPM_Dataset/Data/Processes'
+    sessions = np.arange(1,7)
+
+    time0 = datetime.datetime.strptime('02.10.2014 01:00:00', '%m.%d.%Y %H:%M:%S')
+
+    T = []
+    X = []
+    for id in student_ids:
+        T.append([])
+        X.append([])
+
+    for session in sessions:
+        for id_num in np.arange(logs.shape[0]):
+            if logs[id_num,session-1]:
+                filename = '{}/Session {}/{}'.format(foldername, session, student_ids[id_num])
+                try:
+                    print(filename)
+                    with open(filename) as f:
+                        content = f.readlines()
+                        tt = []
+                        xx = []
+                        for row in content:
+                            split_row = row.split(', ')
+
+                            exercise, activity, start_time, end_time, idle_time, \
+                                mouse_wheel, click, click_left, click_right, mouse_move, \
+                                keystroke = split_row[2:]
+
+                            #Ignore exercise and activity for now
+                            if not start_time[1] == '.':
+                                total_time = None
+                                start_time = None
+                            else:
+                                start_time = datetime.datetime.strptime(start_time, '%m.%d.%Y %H:%M:%S')
+                                start_time = (start_time - time0).total_seconds()
+                                end_time = datetime.datetime.strptime(end_time, '%m.%d.%Y %H:%M:%S')
+                                end_time = (end_time - time0).total_seconds()
+                                total_time = end_time - start_time
+
+                            idle_time = float(idle_time)/1000
+                            mouse_wheel = float(mouse_wheel)
+                            click = float(click)
+                            click_left = float(click_left)
+                            click_right = float(click_right)
+                            mouse_move = float(mouse_move)
+                            keystroke = float(keystroke)
+
+                            tt.append(start_time)
+                            xx.append([total_time, mouse_wheel, click, click_left, click_right, mouse_move, keystroke])
+                except:
+                    print('Could not open', filename)
+                T[id_num].append(tt)
+                X[id_num].append(xx)
+
+    return T, X
+
 def main():
     student_ids, logs = import_logs()
     questions, points, final_grades_1, final_grades_2 = read_final_grades(student_ids)
     int_grades = read_int_grades()
+    time, features = read_exercises(student_ids, logs)
+
+    my_data = {'student_ids': student_ids, 'logs': logs, 'questions': questions,
+        'points': points, 'final_grades_1': final_grades_1, 'final_grades_2': final_grades_2,
+        'int_grades': int_grades, 'time': time, 'features': features}
+
+    output = open('data.pkl', 'wb')
+    pickle.dump(my_data, output)
+    output.close()
 
 if __name__ == '__main__':
     main()
