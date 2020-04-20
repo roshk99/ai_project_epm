@@ -81,9 +81,9 @@ def read_exercises(student_ids, logs):
                     print(filename)
                     with open(filename) as f:
                         content = f.readlines()
-                        tt = []
-                        xx = []
-                        for row in content:
+                        tt = np.empty((len(content)))
+                        xx = np.empty((len(content), 8))
+                        for row_ind, row in enumerate(content):
                             split_row = row.split(', ')
 
                             exercise, activity, start_time, end_time, idle_time, \
@@ -109,8 +109,9 @@ def read_exercises(student_ids, logs):
                             mouse_move = float(mouse_move)
                             keystroke = float(keystroke)
 
-                            tt.append(start_time)
-                            xx.append([total_time, mouse_wheel, click, click_left, click_right, mouse_move, keystroke])
+                            tt[row_ind] = start_time
+                            xx[row_ind,:] = [total_time, idle_time, mouse_wheel, click, \
+                                click_left, click_right, mouse_move, keystroke]
                 except:
                     print('Could not open', filename)
                 T[id_num].append(tt)
@@ -124,10 +125,20 @@ def main():
     int_grades = read_int_grades()
     time, features = read_exercises(student_ids, logs)
 
-    my_data = {'student_ids': student_ids, 'logs': logs, 'questions': questions,
-        'points': points, 'final_grades_1': final_grades_1, 'final_grades_2': final_grades_2,
-        'int_grades': int_grades, 'time': time, 'features': features}
+    Y = np.mean(np.array([final_grades_1[:,-1], final_grades_2[:,-1]]),axis=0)
+    Y = (Y > 40).astype('int')
 
+    T = []
+    X = []
+    for cur_feat, cur_time in zip(features, time):
+        T.append(np.concatenate(cur_time))
+        X.append(np.vstack(cur_feat))
+
+    # my_data = {'student_ids': student_ids, 'logs': logs, 'questions': questions,
+    #     'points': points, 'final_grades_1': final_grades_1, 'final_grades_2': final_grades_2,
+    #     'int_grades': int_grades, 'time': time, 'features': features}
+
+    my_data = {'T': T, 'X': X, 'Y': Y}
     output = open('data.pkl', 'wb')
     pickle.dump(my_data, output)
     output.close()
