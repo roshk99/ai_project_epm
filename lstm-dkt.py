@@ -45,11 +45,14 @@ def get_data(synthetic=True, categories=4):
     if synthetic:
         return generate_data(categories=4)
     else:
-        #TODO: Data should be returned in two lists, namely X and y. Both X and
-        #y are list of lists, e.g., X=[[1, 3, 4], [2, 4, 1], ...] and y = [[0], [2],
-        #...]. The lists inside X are equally-sized, and every list corresponds to a
-        #specific student. Lists inside y are all sized 1 and indicate the label of
-        #students based on their final grade
+        #TODO: Data should be returned in two lists, namely X and y. X is a
+        #list of list of lists. y is a list of lists. E.g., X=[Student1_Inp,
+        #Student2_Inp, ...], y=[Student1_Out, Student2_Out, ...]. Studenti_Inp is a 2D
+        #array (list of lists) representing student i's activities. E.g.,
+        #Student1_Inp=[[3, 5, 1, 0, 5], [1, 4, 5, 1, 10], ...]. Studenti_Out is a
+        #one-element list indicating student i's label (high-achiever, low-achiever,
+        #etc.). E.g., Student1_Out=[1], Student2_Out=[0]
+
         print('To be implemented ...')
         exit()
 
