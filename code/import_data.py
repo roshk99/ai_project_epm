@@ -2,6 +2,7 @@ import xlrd
 import numpy as np
 import datetime
 import pickle
+import os
 
 def read_final_grades_sheet(sheet, student_ids):
     initial_headers = sheet.row_values(0)
@@ -78,7 +79,7 @@ def read_exercises(student_ids, logs):
             if logs[id_num,session-1]:
                 filename = '{}/Session {}/{}'.format(foldername, session, student_ids[id_num])
                 try:
-                    print(filename)
+                    #print(filename)
                     with open(filename) as f:
                         content = f.readlines()
                         tt = np.empty((len(content)))
@@ -92,7 +93,7 @@ def read_exercises(student_ids, logs):
 
                             #Ignore exercise and activity for now
                             if not start_time[1] == '.':
-                                total_time = None
+                                total_time = 0.0
                                 start_time = None
                             else:
                                 start_time = datetime.datetime.strptime(start_time, '%m.%d.%Y %H:%M:%S')
@@ -119,29 +120,35 @@ def read_exercises(student_ids, logs):
 
     return T, X
 
-def main():
-    student_ids, logs = import_logs()
-    questions, points, final_grades_1, final_grades_2 = read_final_grades(student_ids)
-    int_grades = read_int_grades()
-    time, features = read_exercises(student_ids, logs)
+def import_data(categories=4):
 
-    Y = np.mean(np.array([final_grades_1[:,-1], final_grades_2[:,-1]]),axis=0)
-    Y = (Y > 40).astype('int')
+    if not 'data.pkl' in os.listdir():
+        student_ids, logs = import_logs()
+        questions, points, final_grades_1, final_grades_2 = read_final_grades(student_ids)
+        int_grades = read_int_grades()
+        time, features = read_exercises(student_ids, logs)
+        grades = np.mean(np.array([final_grades_1[:,-1], final_grades_2[:,-1]]),axis=0)
 
-    T = []
+        my_data = {'grades': grades, 'features': features}
+        output = open('data.pkl', 'wb')
+        pickle.dump(my_data, output)
+        output.close()
+    else:
+        with open('data.pkl', 'rb') as f:
+            data = pickle.load(f)
+        grades, features = data['grades'], data['features']
+
+    bins = np.linspace(np.min(grades), np.max(grades), categories+1)
+    Y = np.zeros_like(grades).astype('int')
+    for label, (left, right) in enumerate(zip(bins[0:-1], bins[1:])):
+        Y[np.where((grades >= left) & (grades <= right))[0]] = label
+    Y = Y.tolist()
+
     X = []
-    for cur_feat, cur_time in zip(features, time):
-        T.append(np.concatenate(cur_time))
-        X.append(np.vstack(cur_feat))
+    for cur_feat in features:
+        X.append(np.vstack(cur_feat).tolist())
 
-    # my_data = {'student_ids': student_ids, 'logs': logs, 'questions': questions,
-    #     'points': points, 'final_grades_1': final_grades_1, 'final_grades_2': final_grades_2,
-    #     'int_grades': int_grades, 'time': time, 'features': features}
-
-    my_data = {'T': T, 'X': X, 'Y': Y}
-    output = open('data.pkl', 'wb')
-    pickle.dump(my_data, output)
-    output.close()
+    return X, Y
 
 if __name__ == '__main__':
-    main()
+    import_data()
