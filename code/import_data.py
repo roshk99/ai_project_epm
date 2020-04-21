@@ -144,6 +144,8 @@ def import_data(categories=4):
         Y[np.where((grades >= left) & (grades <= right))[0]] = label
     Y = Y.tolist()
 
+    y = [[element] for element in Y]    ### We need a list of lists
+
     seq_lengths = [np.vstack(xx).shape[0] for xx in features]
     max_length = max(seq_lengths)
 
@@ -153,7 +155,7 @@ def import_data(categories=4):
         cur_length = xx.shape[0]
         xx = np.vstack((xx, np.zeros((max_length-cur_length, 8))))
         X.append(xx)
-    return X, Y, seq_lengths
+    return X, y, seq_lengths
 
 if __name__ == '__main__':
     import_data()

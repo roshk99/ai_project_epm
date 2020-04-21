@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from read_data import *
+from import_data import *
 
 class RNN(nn.Module):
     def __init__(self, inputs=5, categories=2, layers=6):
@@ -38,7 +38,9 @@ def generate_data(rows=3, columns=4, samples=10, categories=2):
         X.append(data_set)
         y.append([np.random.randint(0, high=categories)])
 
-    return X, y
+    seq_lengths = [len(x) for x in X]
+
+    return X, y, seq_lengths
 
 
 
@@ -46,13 +48,6 @@ def get_data(synthetic=True, categories=2):
     if synthetic:
         return generate_data(categories=2)
     else:
-        #TODO: Data should be returned in two lists, namely X and y. X is a
-        #list of list of lists. y is a list of lists. E.g., X=[Student1_Inp,
-        #Student2_Inp, ...], y=[Student1_Out, Student2_Out, ...]. Studenti_Inp is a 2D
-        #array (list of lists) representing student i's activities. E.g.,
-        #Student1_Inp=[[3, 5, 1, 0, 5], [1, 4, 5, 1, 10], ...]. Studenti_Out is a
-        #one-element list indicating student i's label (high-achiever, low-achiever,
-        #etc.). E.g., Student1_Out=[1], Student2_Out=[0]
         return import_data(categories)
 
 
@@ -67,27 +62,16 @@ if __name__ == "__main__":
     }
 
     setup = {
-        'loss_report': 20,      # the loss value is printed once every loss_report times
+        'loss_report': 1,      # the loss value is printed once every loss_report times
         'train_portion': 1.0,   # the fraction of dataset from the beginning that will be used for training
         'test_portion': 1.0     # the fraction of dataset from the end that will be used for testing
     }
 
-    X, y = get_data(synthetic=False, categories=model_parameters['categories'])
+    X, y, seq_lengths = get_data(synthetic=False, categories=model_parameters['categories'])
 
     assert len(X) == len(y)
     rows = len(X[0])
     cols = len(X[0][0])
-
-    print ('type(X)=', type(X))
-    print ('len(X)=', len(X))
-    print ('type(X[0])=', type(X[0]))
-    print ('len(X[0])=', len(X[0]))
-    print ('type(X[0][0])=', type(X[0][0]))
-    print ('len(X[0][0])=', len(X[0][0]))
-    print ('type(y)=', type(y))
-    print ('len(y)=', len(y))
-    print ('type(y[0])=', type(y[0]))
-    print ('len(y[0])=', len(y[0]))
 
     print('The dataset includes the record of {} students, each with {} timesteps, where every timestep includes the information of {} activities!'.format(len(X), rows, cols))
 
