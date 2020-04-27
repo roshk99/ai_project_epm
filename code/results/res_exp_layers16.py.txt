@@ -1,0 +1,22 @@
+The dataset includes the record of 115 students, each with 4061 timesteps, where every timestep includes the information of 8 activities!
+model_parameters:
+{'categories': 2, 'layers': 16, 'learning_rate': 0.001, 'epochs': 15}
+setup:
+{'loss_report': 1, 'train_portion': 0.75, 'test_portion': 0.25}
+Loss:  1.0416405
+Loss:  0.8641558
+Loss:  0.58578086
+Loss:  0.4556991
+Loss:  0.4302027
+Loss:  0.418182
+Loss:  0.41054448
+Loss:  0.40504938
+Loss:  0.40082538
+Loss:  0.39744657
+Loss:  0.394673
+Loss:  0.39235562
+Loss:  0.39039484
+Loss:  0.38872007
+Loss:  0.38727948
+Accuracy: 0.793
+--- 25799.747950553894 seconds ---
